@@ -5,12 +5,19 @@ Stages:
 1. Text-to-Speech: Convert voiceover script to MP3
 2. Video rendering: Create visual component with on-screen text
 3. Stitch: Merge audio and video
+
+🔥 AESTHETIC: UnfranchisedFC Brutalist Style
+   - Black/white/red/yellow color palette
+   - Bold typography (IMPACT, BEBAS NEUE)
+   - Film grain + halftone effects
+   - High contrast, minimal decoration
+   - Looks like protest banners, not corporate broadcast
 """
 
 import os
 import subprocess
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 from loguru import logger
 
 try:
@@ -25,6 +32,13 @@ try:
     )
 except ImportError:
     logger.warning("moviepy not installed. Install with: pip install moviepy")
+
+# Import visual style configuration
+try:
+    from visual_style import UNFRANCHISED_STYLE, get_ffmpeg_filter_chain
+except ImportError:
+    logger.warning("visual_style module not found. Using default colors.")
+    UNFRANCHISED_STYLE = None
 
 
 def generate_audio(voiceover_text: str, output_dir: Path) -> Path:

@@ -10,6 +10,12 @@ Returns strict JSON with voiceover, on-screen text, and caption.
 
 ⚠️  PRIVACY NOTE: Free cloud models may use your data for training.
    For sensitive code, use local Ollama or paid tier.
+
+🔥 ETHOS: All outputs use UnfranchisedFC system prompt
+   - Anti-corporate, pro-community tone
+   - Working-class perspective
+   - Pro/rel narrative
+   - Justice-centered language
 """
 
 import os
@@ -30,24 +36,81 @@ except ImportError:
     requests = None
 
 
+# UnfranchisedFC System Prompt - The Soul of the Channel
+UNFRANCHISED_SYSTEM_PROMPT = """
+You are the voice of UnfranchisedFC, an automated megaphone for working-class, 
+anti-corporate soccer culture.
+
+Your tone is gritty, rebellious, and fiercely pro-community. You believe:
+
+- Football belongs to the working class, immigrants, and marginalized communities
+- Promotion/relegation = democratization. The MLS franchise model = exploitation
+- Accessibility is justice. Billionaires don't own the game
+- USL represents hope for American soccer's future
+
+NEVER:
+- Sound like ESPN (corporate, neutral, boring)
+- Use corporate jargon ("stakeholder", "engagement", "optimization")
+- Both-sides exploitation (billionaires are not legitimate)
+- Assume fans can afford luxury prices
+
+ALWAYS:
+- Be direct and confrontational
+- Highlight inequality by name
+- Celebrate working-class heroes (immigrants, queer players, community-owned clubs)
+- End with a call to action
+- Use punchy, short sentences
+- Sound like a supporter, not a broadcaster
+
+Inspiration: FC St. Pauli, Rayo Vallecano, Detroit City FC, Oakland Roots.
+
+Write scripts that feel like a manifesto, not a broadcast.
+Accessibility is justice. Pro/rel proves it.
+"""
+
+
 def build_prompt(data: Dict[str, Any]) -> str:
     """
     Build a detailed, deterministic prompt for the LLM.
     
+    Includes UnfranchisedFC system prompt to ensure working-class,
+    anti-corporate, pro-community tone.
+    
     Instructs the model to return strict JSON format.
     """
     
-    # Extract key data points (you'll customize this based on your sources)
+    # Extract key data points
     api_sports = data.get("sources", {}).get("api_sports", {})
     twitter = data.get("sources", {}).get("twitter", [])
     news = data.get("sources", {}).get("news", [])
     
-    # Build the prompt
-    prompt = f"""You are a sports content creator for an Instagram Reel about USL Championship.
-Your job is to generate engaging, factual content for a SHORT video (15-30 seconds).
+    # Build the prompt with ethos
+    prompt = f"""{UNFRANCHISED_SYSTEM_PROMPT}
+
+---
+
+You are creating content for an Instagram Reel about USL Championship.
+Your job is to generate a 15-30 second script that is:
+- Gritty, confrontational, pro-community
+- Data-driven but not sterile
+- A MANIFESTO, not a broadcast
 
 INPUT DATA:
-{json.dumps(data, indent=2)[:1000]}  # Truncate for context
+{json.dumps(data, indent=2)[:1500]}
+
+REQUIRED OUTPUT FORMAT (strict JSON):
+{{
+  "voiceover": "60-90 word script for TTS narration",
+  "on_screen_text": "Bold, punchy text overlay (max 10 words)",
+  "caption": "Instagram caption with hashtags",
+  "tone": "gritty/rebellious/manifesto"
+}}
+
+Remember: This is not ESPN. This is a working-class megaphone.
+Make it feel like a St. Pauli banner, not a corporate broadcast.
+"""
+    
+    return prompt
 
 INSTRUCTIONS:
 1. Generate a SHORT voiceover script (2-3 sentences max, ~15 seconds when read aloud)
