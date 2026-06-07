@@ -9,10 +9,17 @@ Sources:
 2. NARRATIVE & CULTURE
    - Reddit API (PRAW) - r/USLPRO, r/MLS sentiment
    
-3. STATIC CONTEXT DATA
-   - base_camps.json - World Cup 2026 base camps
+3. INTERNATIONAL PLAY & TRANSFERS
+   - World Cup 2026 - USMNT/MXMNT matches, USL connections
+   - Transfer Market - Global player movement tracking
+   - Player Cross-Reference - USL players in World Cup
    
-4. NEWS & UPDATES
+4. STATIC CONTEXT DATA
+   - base_camps.json - World Cup 2026 base camps
+   - usl_world_cup_players.json - USL players in World Cup
+   - transfers.json - Global transfer data
+   
+5. NEWS & UPDATES
    - RSS feeds - USL official, team news
    - Twitter/X feeds - Breaking updates
 """
@@ -405,7 +412,10 @@ def consolidate_data() -> Dict[str, Any]:
     Consolidate all data sources into a single structured object.
     
     This is the data foundation for the LLM and animation engine.
+    Includes USL domestic data + international World Cup tracking.
     """
+    from world_cup_tracker import fetch_international_data
+    
     consolidated = {
         "timestamp": datetime.now().isoformat(),
         "sources": {
@@ -432,6 +442,9 @@ def consolidate_data() -> Dict[str, Any]:
             
             # Static context (World Cup base camps)
             "world_cup_base_camps": load_base_camps(),
+            
+            # International play & transfers (NEW)
+            "international_data": fetch_international_data(),
             
             # Twitter/X feeds (from previous implementation)
             "twitter": fetch_from_twitter_accounts(),

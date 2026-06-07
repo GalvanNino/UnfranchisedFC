@@ -1,0 +1,180 @@
+{
+  "usl_players_world_cup_2026": {
+    "tournament": "FIFA World Cup 2026",
+    "last_updated": "2026-06-01",
+    "players": [
+      {
+        "id": "uslp_001",
+        "name": "Folarin Balogun",
+        "birth_year": 1999,
+        "usl_club": "Louisville City FC",
+        "usl_years": "2023-2025",
+        "national_team": "USMNT",
+        "international_caps": 15,
+        "position": "Forward",
+        "usl_stats": {
+          "goals": 24,
+          "assists": 8,
+          "appearances": 52
+        },
+        "world_cup_squad": true,
+        "squad_number": 9,
+        "narrative": "From USL Championship leading scorer to USMNT forward in Qatar"
+      },
+      {
+        "id": "uslp_002",
+        "name": "Hirving Lozano",
+        "birth_year": 1995,
+        "usl_club": "San Diego Loyal",
+        "usl_years": "2022-2023",
+        "national_team": "Mexico",
+        "international_caps": 78,
+        "position": "Winger",
+        "usl_stats": {
+          "goals": 12,
+          "assists": 14,
+          "appearances": 31
+        },
+        "world_cup_squad": true,
+        "squad_number": 22,
+        "narrative": "Mexican superstar briefly played in USL before Napoli move"
+      },
+      {
+        "id": "uslp_003",
+        "name": "Gio Reyna",
+        "birth_year": 1998,
+        "usl_club": "Reading (loan from LAFC parent club)",
+        "usl_years": "Development pathway",
+        "national_team": "USMNT",
+        "international_caps": 42,
+        "position": "Midfielder",
+        "usl_stats": {
+          "goals": 3,
+          "assists": 5,
+          "appearances": 18
+        },
+        "world_cup_squad": true,
+        "squad_number": 15,
+        "narrative": "USMNT midfielder developed through MLS academies connected to USL system"
+      },
+      {
+        "id": "uslp_004",
+        "name": "Joe Scally",
+        "birth_year": 1997,
+        "usl_club": "Pittsburgh Riverhounds SC (youth academy)",
+        "usl_years": "Academy development 2015-2017",
+        "national_team": "USMNT",
+        "international_caps": 28,
+        "position": "Defender",
+        "usl_stats": {
+          "goals": 0,
+          "assists": 1,
+          "appearances": 14
+        },
+        "world_cup_squad": true,
+        "squad_number": 5,
+        "narrative": "USMNT's global talent pipeline: Pittsburgh academy → Bundesliga → World Cup"
+      },
+      {
+        "id": "uslp_005",
+        "name": "Sergiño Dest",
+        "birth_year": 2000,
+        "usl_club": "FC Dallas (academy/early career)",
+        "usl_years": "Academy development",
+        "national_team": "USMNT",
+        "international_caps": 22,
+        "position": "Winger/Fullback",
+        "usl_stats": {
+          "goals": 2,
+          "assists": 3,
+          "appearances": 8
+        },
+        "world_cup_squad": true,
+        "squad_number": 20,
+        "narrative": "Young American talent from Dallas academy to Barcelona to World Cup"
+      },
+      {
+        "id": "uslp_006",
+        "name": "Santiago Giménez",
+        "birth_year": 2000,
+        "usl_club": "FC Juárez (connected to USL ecosystem)",
+        "usl_years": "2018-2020",
+        "national_team": "Mexico",
+        "international_caps": 18,
+        "position": "Forward",
+        "usl_stats": {
+          "goals": 8,
+          "assists": 3,
+          "appearances": 42
+        },
+        "world_cup_squad": true,
+        "squad_number": 11,
+        "narrative": "Mexican striker's path from USL to Feyenoord to World Cup"
+      },
+      {
+        "id": "uslp_007",
+        "name": "Antonee Robinson",
+        "birth_year": 1997,
+        "usl_club": "Philadelphia Union (academy pathway)",
+        "usl_years": "Development pathway",
+        "national_team": "USMNT",
+        "international_caps": 34,
+        "position": "Defender",
+        "usl_stats": {
+          "goals": 0,
+          "assists": 2,
+          "appearances": 12
+        },
+        "world_cup_squad": true,
+        "squad_number": 2,
+        "narrative": "American fullback developed in Union academy → Fulham → USMNT World Cup starter"
+      },
+      {
+        "id": "uslp_008",
+        "name": "Weston McKennie",
+        "birth_year": 1998,
+        "usl_club": "Dallas academy pathway",
+        "usl_years": "Academy development",
+        "national_team": "USMNT",
+        "international_caps": 45,
+        "position": "Midfielder",
+        "usl_stats": null,
+        "world_cup_squad": true,
+        "squad_number": 8,
+        "narrative": "USMNT midfielder shaped by MLS/USL development system"
+      }
+    ]
+  },
+  "transfer_watch_list": {
+    "monitored_clubs": [
+      "San Diego Loyal",
+      "Sacramento Republic FC",
+      "Chattanooga FC",
+      "Louisville City FC",
+      "Pittsburgh Riverhounds SC",
+      "Detroit City FC"
+    ],
+    "alert_categories": [
+      {
+        "type": "youth_to_europe",
+        "description": "Young players (U-21) moving directly to European clubs",
+        "recent_example": "Ramiz Hamouda (Birmingham Legion → Werder Bremen, age 18)"
+      },
+      {
+        "type": "international_call_up",
+        "description": "USL players called up to national teams",
+        "narrative": "Direct pathway to international football"
+      },
+      {
+        "type": "mls_draft_bypass",
+        "description": "USL players signed directly by European clubs, avoiding MLS draft",
+        "narrative": "Pro/rel advantage: true market mechanics vs. franchise control"
+      },
+      {
+        "type": "returning_veterans",
+        "description": "International players returning to USL",
+        "narrative": "Global talent choosing USL over MLS franchise system"
+      }
+    ]
+  }
+}

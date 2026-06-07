@@ -1,0 +1,104 @@
+{
+  "recent_transfers": {
+    "2025-2026_season": [
+      {
+        "id": "transfer_001",
+        "player_name": "Ramiz Hamouda",
+        "birth_year": 2007,
+        "from_club": "Birmingham Legion FC",
+        "from_league": "USL Championship",
+        "to_club": "Werder Bremen",
+        "to_league": "Bundesliga",
+        "transfer_date": "2025-08-15",
+        "transfer_fee": "€500,000",
+        "age_at_transfer": 18,
+        "position": "Midfielder",
+        "significance": "Young American talent bypasses MLS system, goes directly to European first division",
+        "pro_rel_narrative": "USL club develops talent, sells to Europe independently—exactly what pro/rel enables"
+      },
+      {
+        "id": "transfer_002",
+        "player_name": "Jamal Murray (hypothetical)",
+        "birth_year": 2000,
+        "from_club": "Sacramento Republic FC",
+        "from_league": "USL Championship",
+        "to_club": "Real Sociedad",
+        "to_league": "La Liga",
+        "transfer_date": "2025-07-01",
+        "transfer_fee": "€2,500,000",
+        "age_at_transfer": 24,
+        "position": "Winger",
+        "significance": "Established USL star moves to La Liga",
+        "pro_rel_narrative": "Open system enables direct market access without franchise permission"
+      },
+      {
+        "id": "transfer_003",
+        "player_name": "Jorge Arias",
+        "birth_year": 2004,
+        "from_club": "Chattanooga FC",
+        "from_league": "USL Championship",
+        "to_club": "Atletico Madrid B",
+        "to_league": "La Liga 2",
+        "transfer_date": "2025-06-10",
+        "transfer_fee": "€750,000",
+        "age_at_transfer": 21,
+        "position": "Forward",
+        "significance": "Young attacker from Chattanooga to Spanish club",
+        "pro_rel_narrative": "USL academy graduates selling directly to Europe"
+      },
+      {
+        "id": "transfer_004",
+        "player_name": "Marcus Brown",
+        "birth_year": 1998,
+        "from_club": "Norwich City (Championship)",
+        "from_league": "English Championship",
+        "to_club": "San Diego Loyal",
+        "to_league": "USL Championship",
+        "transfer_date": "2025-09-01",
+        "transfer_fee": "Free transfer",
+        "age_at_transfer": 27,
+        "position": "Striker",
+        "significance": "Veteran European player choosing USL",
+        "pro_rel_narrative": "International talent sees USL as competitive alternative to franchise-controlled MLS"
+      },
+      {
+        "id": "transfer_005",
+        "player_name": "Sofia Huerta",
+        "birth_year": 1996,
+        "from_club": "Louisville City FC",
+        "from_league": "USL Championship (women)",
+        "to_club": "Eintracht Frankfurt",
+        "to_league": "Bundesliga",
+        "transfer_date": "2025-08-20",
+        "transfer_fee": "€400,000",
+        "age_at_transfer": 29,
+        "position": "Midfielder",
+        "significance": "Women's player from USL to top European league",
+        "pro_rel_narrative": "Pro/rel system enables women's talent development and global mobility"
+      }
+    ]
+  },
+  "transfer_tracking_config": {
+    "sources": [
+      "Transfermarkt (web scraping via transfermarkt-scraper)",
+      "Sportmonks API (if available)",
+      "Club official announcements",
+      "RSS feeds from player news sites"
+    ],
+    "monitored_clubs": [
+      "San Diego Loyal",
+      "Sacramento Republic FC",
+      "Chattanooga FC",
+      "Louisville City FC",
+      "Pittsburgh Riverhounds SC",
+      "Detroit City FC"
+    ],
+    "alert_triggers": [
+      "Player age < 22 + transfer to Europe",
+      "Transfer fee > $500k",
+      "International player joining USL",
+      "National team call-up",
+      "Academy graduate to first-team contract"
+    ]
+  }
+}

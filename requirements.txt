@@ -21,6 +21,11 @@ feedparser==6.0.10      # RSS feed parsing
 praw==7.7.0             # Reddit API (Python Reddit API Wrapper)
 wikipedia==1.4.0        # Wikipedia API client (OPTIONAL - requests does the job)
 
+# Transfer market tracking (OPTIONAL)
+# transfermarkt-scraper can be installed via:
+# pip install git+https://github.com/dcaribou/transfermarkt-scraper.git
+# For now, we use manual API/scraping
+
 # Utilities
 python-dotenv==1.0.0
 pyyaml==6.0.1
