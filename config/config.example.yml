@@ -1,0 +1,37 @@
+# Example configuration file for the FLIG pipeline
+# Copy to config/config.yml and customize as needed
+
+# Schedule (cron format)
+schedule_cron: "0 10 * * 2,4"  # Tuesday, Thursday at 10 AM UTC
+
+# LLM Settings (Together.ai)
+llm_model: "meta-llama/Llama-3-70b-chat-hf"
+llm_temperature: 0.7
+llm_max_tokens: 512
+
+# TTS Settings (ElevenLabs)
+tts_provider: "elevenlabs"
+tts_voice_id: "21m00Tcm4TlvDq8ikWAM"  # Rachel voice
+
+# Video Settings
+video_width: 1080
+video_height: 1920  # 9:16 for Instagram Reels
+video_fps: 30
+video_codec: "libx264"
+
+# Styling
+background_color: [25, 45, 85]  # RGB: Dark blue
+text_color: "white"
+text_fontsize: 80
+text_font: "Arial-Bold"
+
+# Output
+output_dir: "./output"
+keep_intermediate_files: false
+
+# Data Sources
+data_sources:
+  - api_sports
+  - usl_website
+  - twitter
+  - news
