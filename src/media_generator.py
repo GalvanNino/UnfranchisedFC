@@ -4,7 +4,9 @@ Media generation module: Create audio (TTS) and video (Manim/MoviePy).
 Stages:
 1. Text-to-Speech: Convert voiceover script to MP3
 2. Video rendering: Create visual component with on-screen text
-3. Stitch: Merge audio and video
+3. Apply visual brutalism: Film grain, halftone, high contrast
+4. Mix audio: Voiceover + Barrio y Rebeldía soundtrack or raw chants
+5. Stitch: Merge audio and video
 
 🔥 AESTHETIC: UnfranchisedFC Brutalist Style
    - Black/white/red/yellow color palette
@@ -33,12 +35,19 @@ try:
 except ImportError:
     logger.warning("moviepy not installed. Install with: pip install moviepy")
 
-# Import visual style configuration
+# Import visual style and audio strategy
 try:
-    from visual_style import UNFRANCHISED_STYLE, get_ffmpeg_filter_chain
+    from visual_style import UNFRANCHISED_STYLE, get_ffmpeg_filter_chain, get_color_palette_hex
 except ImportError:
     logger.warning("visual_style module not found. Using default colors.")
     UNFRANCHISED_STYLE = None
+    get_ffmpeg_filter_chain = None
+
+try:
+    from audio_strategy import AUDIO_OPTIONS, AUDIO_STYLE_GUIDE
+except ImportError:
+    logger.warning("audio_strategy module not found.")
+    AUDIO_OPTIONS = None
 
 
 def generate_audio(voiceover_text: str, output_dir: Path) -> Path:
@@ -121,19 +130,28 @@ def generate_silent_audio(text: str, output_dir: Path) -> Path:
 def generate_video(
     content: Dict[str, str],
     audio_path: Path,
-    output_dir: Path
+    output_dir: Path,
+    apply_brutalism: bool = True
 ) -> Path:
     """
     Generate video with on-screen text using MoviePy.
     
-    Creates a simple, clean graphic:
-    - Colored background (or gradient)
-    - Large on-screen text centered
-    - Duration matches audio
+    Creates a UnfranchisedFC brutalist graphic:
+    - Pure black or white background (high contrast)
+    - Large, bold on-screen text
+    - Applies visual brutalism (film grain, halftone, vignette)
+    - Instagram Reel aspect ratio (9:16)
     
-    Returns path to generated MP4.
+    Args:
+        content: Dict with "on_screen_text" and "voiceover"
+        audio_path: Path to generated audio
+        output_dir: Output directory for video
+        apply_brutalism: Whether to apply visual effects (default True)
+    
+    Returns:
+        Path to generated MP4.
     """
-    logger.info("🎬 Generating video...")
+    logger.info("🎬 Generating video with brutalist aesthetic...")
     
     try:
         # Get audio duration
@@ -141,51 +159,129 @@ def generate_video(
         duration = audio.duration
         logger.info(f"Audio duration: {duration:.2f}s")
         
-        # Create a simple colored background video
-        # Using a dark blue background (sports theme)
+        # Get UnfranchisedFC color palette (black/white/red/yellow)
+        colors_hex = get_color_palette_hex() if get_color_palette_hex else {
+            "black": "#000000",
+            "white": "#FFFFFF",
+            "red": "#DC143C",
+        }
+        
+        # Create background: Pure black (stark, dramatic)
+        bg_color = (0, 0, 0)  # Black RGB
         background = ColorfulVideoClip(
-            size=(1080, 1920),  # Instagram Reel aspect ratio (9:16)
-            color=(25, 45, 85)  # Dark blue
+            size=(1080, 1920),  # Instagram Reel: 9:16 vertical
+            color=bg_color
         ).set_duration(duration)
         
-        # Create text overlay
+        # Create text overlay with bold typography
         text = content["on_screen_text"]
         text_clip = TextClip(
             text,
-            fontsize=80,
+            fontsize=90,
             color="white",
-            font="Arial-Bold",
+            font="Arial-Black",  # Heavy sans-serif
             method="caption",
-            size=(900, 400)  # Width, height of text box
+            size=(900, 400)
         ).set_position("center").set_duration(duration)
         
-        # Composite video: background + text
+        # Composite: background + text
         final_video = CompositeVideoClip([background, text_clip])
         
         # Set audio
         final_video = final_video.set_audio(audio)
         
-        # Write output
-        output_path = output_dir / "video" / "final_video.mp4"
+        # Write output (without effects for now; we'll apply them with ffmpeg)
+        output_path = output_dir / "video" / "final_video_raw.mp4"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
-        logger.info(f"Writing video to {output_path}...")
+        logger.info(f"Writing raw video to {output_path}...")
         final_video.write_videofile(
             str(output_path),
             fps=30,
             codec="libx264",
             audio_codec="aac",
-            preset="medium",  # Balance speed vs quality
+            preset="medium",
             verbose=False,
             logger=None
         )
         
-        logger.info(f"✓ Video generated: {output_path}")
+        logger.info(f"✓ Raw video generated: {output_path}")
+        
+        # Apply visual brutalism using ffmpeg
+        if apply_brutalism:
+            final_path = apply_visual_brutalism(output_path, output_dir)
+            logger.info(f"✓ Visual brutalism applied: {final_path}")
+            return final_path
+        
         return output_path
         
     except Exception as e:
         logger.error(f"Video generation failed: {e}")
         raise
+
+
+def apply_visual_brutalism(raw_video_path: Path, output_dir: Path) -> Path:
+    """
+    Apply UnfranchisedFC visual brutalism to video:
+    - Film grain overlay
+    - Halftone effect (optional)
+    - High contrast boost
+    - Increased saturation
+    - Vignette (darkened edges)
+    
+    Uses ffmpeg filter chain.
+    
+    Returns:
+        Path to brutalism-applied video.
+    """
+    logger.info("🎨 Applying visual brutalism (film grain, contrast, vignette)...")
+    
+    output_path = output_dir / "video" / "final_video.mp4"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # FFmpeg filter chain for UnfranchisedFC aesthetic
+    # eq=contrast=1.4: Boost contrast (make blacks blacker, whites whiter)
+    # hue=s=1.2: Increase saturation (punchy colors)
+    # noise=alls=0.04:allf=t: Add film grain
+    # vignette=ratio=2:thickness=0.15: Darken edges
+    filters = "eq=contrast=1.4,hue=s=1.2,noise=alls=0.04:allf=t,vignette=ratio=2:thickness=0.15"
+    
+    cmd = [
+        "ffmpeg",
+        "-i", str(raw_video_path),
+        "-vf", filters,
+        "-c:v", "libx264",
+        "-crf", "18",  # Quality (lower = better)
+        "-c:a", "aac",
+        "-b:a", "128k",
+        str(output_path),
+        "-y"  # Overwrite
+    ]
+    
+    try:
+        logger.info(f"FFmpeg command: {' '.join(cmd[:5])}...")
+        subprocess.run(cmd, check=True, capture_output=True)
+        logger.info(f"✓ Brutalism applied: {output_path}")
+        
+        # Clean up raw video
+        raw_video_path.unlink()
+        
+        return output_path
+    except subprocess.CalledProcessError as e:
+        logger.error(f"ffmpeg filter failed: {e}")
+        raise
+
+
+def get_color_palette_hex() -> Dict[str, str]:
+    """Return UnfranchisedFC color palette in hex format."""
+    return {
+        "black": "#000000",
+        "white": "#FFFFFF",
+        "red": "#DC143C",
+        "yellow": "#FFC800",
+        "dark_gray": "#1E1E1E",
+        "light_gray": "#C8C8C8"
+    }
 
 
 def merge_audio_video(video_path: Path, audio_path: Path, output_dir: Path) -> Path:

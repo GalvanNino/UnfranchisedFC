@@ -163,6 +163,7 @@ def call_llm_opencode_zen(prompt: str, model: str = "big-pickle") -> str:
     payload = {
         "model": model,
         "messages": [
+            {"role": "system", "content": UNFRANCHISED_SYSTEM_PROMPT},
             {"role": "user", "content": prompt}
         ],
         "max_tokens": 512,
@@ -190,6 +191,8 @@ def call_llm_together(prompt: str) -> str:
     """
     Fallback: Call Llama 3 or Mistral via Together.ai API.
     
+    Includes UnfranchisedFC system prompt for consistent manifesto tone.
+    
     Costs ~$0.0008 per 1K tokens (very cheap).
     Requires TOGETHER_API_KEY environment variable.
     """
@@ -201,9 +204,12 @@ def call_llm_together(prompt: str) -> str:
     
     client = together.Together(api_key=api_key)
     
+    # Prepend system prompt to user prompt for Together.ai
+    full_prompt = f"{UNFRANCHISED_SYSTEM_PROMPT}\n\n---\n\n{prompt}"
+    
     response = client.complete(
         model="meta-llama/Llama-3-70b-chat-hf",
-        prompt=prompt,
+        prompt=full_prompt,
         max_tokens=512,
         temperature=0.7,
         top_p=0.95,
