@@ -353,14 +353,19 @@ MoviePy error: ffmpeg not found
 4. **Iterate on LLM prompts** to refine content quality
 5. **Scale** by scheduling additional content types
 
-## Resources
+## Documentation
 
-- [Together.ai Docs](https://docs.together.ai/)
-- [ElevenLabs API](https://elevenlabs.io/docs/api-reference)
-- [MoviePy Docs](https://zulko.github.io/moviepy/)
-- [instagrapi Docs](https://subzerocool.github.io/instagrapi/)
-- [Meta Graph API](https://developers.facebook.com/docs/instagram-api)
-- [GitHub Actions Docs](https://docs.github.com/en/actions)
+- **[README.md](README.md)** - You are here
+- **[QUICKSTART.md](QUICKSTART.md)** - 10-minute setup guide
+- **[OPENCODE_SETUP.md](OPENCODE_SETUP.md)** - Free LLM integration
+- **[DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md)** - Comprehensive data pipeline (NEW)
+
+The **[DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md)** document explains the complete data infrastructure:
+- Live API data (API-Football, Wikipedia)
+- Cultural sentiment (Reddit)
+- News & updates (RSS feeds, Twitter)
+- Static context (World Cup 2026 base camps)
+- How they all connect for authenticity
 
 ## License
 

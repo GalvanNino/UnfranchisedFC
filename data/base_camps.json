@@ -1,0 +1,153 @@
+{
+  "2026_world_cup_base_camps": {
+    "tournament": "FIFA World Cup 2026",
+    "host_country": "USA",
+    "base_camps": [
+      {
+        "country": "Argentina",
+        "base_camp_city": "Kansas City",
+        "state": "Missouri",
+        "stadium": "Children's Mercy Park",
+        "usl_club": "Sporting Kansas City",
+        "usl_league": "MLS (but connected to USL ecosystem)",
+        "context": "Argentina preparing in the American Midwest - home of one of MLS's most storied franchises",
+        "relevance": "Pro/rel narrative: Can SKC move up? Argentina's presence highlights American soccer's potential"
+      },
+      {
+        "country": "Spain",
+        "base_camp_city": "Chattanooga",
+        "state": "Tennessee",
+        "stadium": "Finley Stadium",
+        "usl_club": "Chattanooga FC",
+        "usl_league": "USL Championship",
+        "context": "Spain's technical excellence base in Tennessee - home to rising USL Championship side",
+        "relevance": "Chattanooga FC as a bridge between World Cup superpowers and American pro/rel pyramid"
+      },
+      {
+        "country": "Germany",
+        "base_camp_city": "Philadelphia",
+        "state": "Pennsylvania",
+        "stadium": "Lincoln Financial Field",
+        "usl_club": "Union (MLS) + USL teams in region",
+        "usl_league": "MLS + USL League One nearby",
+        "context": "German tradition meets American soccer development",
+        "relevance": "Philadelphia as a soccer hub with multiple professional tiers"
+      },
+      {
+        "country": "Brazil",
+        "base_camp_city": "Los Angeles",
+        "state": "California",
+        "stadium": "SoFi Stadium",
+        "usl_club": "LA Galaxy, LAFC (MLS) + USL teams",
+        "usl_league": "MLS + USL Championship",
+        "context": "Brazil's Seleção training in the capital of American soccer infrastructure",
+        "relevance": "Los Angeles as the epicenter of US soccer development and pro/rel potential"
+      },
+      {
+        "country": "France",
+        "base_camp_city": "Cincinnati",
+        "state": "Ohio",
+        "stadium": "TQL Stadium",
+        "usl_club": "FC Cincinnati (MLS) + USL teams",
+        "usl_league": "MLS + USL Championship",
+        "context": "French sophistication meets Cincinnati's soccer renaissance",
+        "relevance": "FCC's ascent from USL to MLS as a Pro/Rel success story"
+      },
+      {
+        "country": "England",
+        "base_camp_city": "New York",
+        "state": "New York",
+        "stadium": "MetLife Stadium / Citi Field",
+        "usl_club": "NYCFC, New York Red Bulls (MLS) + USL teams",
+        "usl_league": "MLS + USL Championship",
+        "context": "English football tradition in the American metropolis",
+        "relevance": "New York's soccer infrastructure and pro/rel ecosystem"
+      },
+      {
+        "country": "Netherlands",
+        "base_camp_city": "San Diego",
+        "state": "California",
+        "stadium": "Snapdragon Stadium",
+        "usl_club": "San Diego Loyal",
+        "usl_league": "USL Championship",
+        "context": "Dutch technical play meets San Diego Loyal's ambitious rise",
+        "relevance": "San Diego as a key USL Championship power challenging for promotion"
+      },
+      {
+        "country": "Belgium",
+        "base_camp_city": "Detroit",
+        "state": "Michigan",
+        "stadium": "Cass Technical High School (planned) / Ford Field",
+        "usl_club": "Detroit City FC",
+        "usl_league": "USL Championship",
+        "context": "Detroit FC's independent, community-driven model as American soccer alternative",
+        "relevance": "Pro/rel discussion: Detroit's grassroots challenge to traditional franchise model"
+      },
+      {
+        "country": "Portugal",
+        "base_camp_city": "Sacramento",
+        "state": "California",
+        "stadium": "Heart Health Park",
+        "usl_club": "Sacramento Republic FC",
+        "usl_league": "USL Championship",
+        "context": "Portuguese tactical innovation meets Sacramento's ambitious expansion",
+        "relevance": "Sacramento Republic as a pre-MLS/potential pro/rel promotion contender"
+      },
+      {
+        "country": "Uruguay",
+        "base_camp_city": "Austin",
+        "state": "Texas",
+        "stadium": "Q2 Stadium",
+        "usl_club": "Austin FC (MLS) + USL Championship teams",
+        "usl_league": "MLS + USL Championship",
+        "context": "Uruguayan football heritage in Texas tech hub",
+        "relevance": "Austin's rapid soccer growth and infrastructure"
+      },
+      {
+        "country": "Mexico",
+        "base_camp_city": "Dallas",
+        "state": "Texas",
+        "stadium": "Toyota Stadium",
+        "usl_club": "FC Dallas (MLS) + USL teams",
+        "usl_league": "MLS + USL Championship",
+        "context": "Mexican football power next to American pro/rel opportunity",
+        "relevance": "Dallas as a bridge between CONCACAF traditions and American pyramid"
+      },
+      {
+        "country": "Canada",
+        "base_camp_city": "Toronto",
+        "state": "Ontario",
+        "stadium": "BMO Field",
+        "usl_club": "Toronto FC (MLS) + USL teams",
+        "usl_league": "MLS + USL Championship",
+        "context": "Canadian soccer growth and Toronto's professional infrastructure",
+        "relevance": "Cross-border pro/rel narrative with CONCACAF context"
+      }
+    ]
+  },
+  "usl_championship_2026": {
+    "league": "USL Championship",
+    "season": 2026,
+    "pro_rel_eligible_clubs": [
+      "San Diego Loyal",
+      "Sacramento Republic FC",
+      "Chattanooga FC",
+      "Louisville City FC",
+      "Pittsburgh Riverhounds SC",
+      "Detroit City FC",
+      "Charleston Battery",
+      "Colorado Springs Switchbacks FC"
+    ],
+    "context": "These clubs are tracking toward USL Premier elevation or are considered pro/rel contenders"
+  },
+  "usl_league_one_2026": {
+    "league": "USL League One (Division 2)",
+    "season": 2026,
+    "expansion_markets": [
+      "Omaha",
+      "Louisville (independent)",
+      "Miami",
+      "Atlanta metro"
+    ]
+  }
+}

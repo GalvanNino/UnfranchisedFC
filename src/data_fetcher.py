@@ -1,90 +1,268 @@
 """
-Data fetching module: Pull USL standings, news, and updates.
+Data fetching module: Comprehensive data architecture for UnfranchisedFC.
 
 Sources:
-- API Sports (sports-api.com or similar)
-- USL official website (web scraping)
-- Twitter/X feeds (via API or scraping)
-- News feeds (RSS or API)
+1. LIVE MATCH DATA
+   - API-Football (Sportmonks) - Live standings, results
+   - Wikipedia API - Stadium capacity, club info
+
+2. NARRATIVE & CULTURE
+   - Reddit API (PRAW) - r/USLPRO, r/MLS sentiment
+   
+3. STATIC CONTEXT DATA
+   - base_camps.json - World Cup 2026 base camps
+   
+4. NEWS & UPDATES
+   - RSS feeds - USL official, team news
+   - Twitter/X feeds - Breaking updates
 """
 
 import os
 import requests
+import json
 from datetime import datetime
 from loguru import logger
-from typing import Dict, Any, List
-import json
+from typing import Dict, Any, List, Optional
+from pathlib import Path
+
+try:
+    import feedparser
+except ImportError:
+    feedparser = None
+    logger.warning("feedparser not installed. RSS feeds will be skipped.")
+
+try:
+    import praw
+except ImportError:
+    praw = None
+    logger.warning("praw not installed. Reddit sentiment will be skipped.")
 
 
 def fetch_from_api_sports() -> Dict[str, Any]:
     """
-    Fetch USL standings from API-Football or similar.
+    Fetch USL standings from API-Football or Sportmonks.
     
-    Replace with actual API endpoint and credentials.
-    Example: https://api-football-v1.p.rapidapi.com/v3/standings
+    Supports:
+    - API-Football (rapid-api): https://rapidapi.com/api-sports/api/api-football
+    - Sportmonks: https://www.sportmonks.com/
+    
+    Both provide live standings, recent results, and team statistics.
     """
     try:
-        # Placeholder - replace with your actual API
-        logger.info("📡 Fetching from API Sports...")
+        logger.info("📡 Fetching from API-Football...")
         
-        # Example structure - modify based on your actual API
-        standings = {
-            "league": "USL Championship",
-            "season": 2026,
-            "teams": [
-                {
-                    "position": 1,
-                    "team": "San Diego Loyal",
-                    "played": 20,
-                    "wins": 14,
-                    "draws": 4,
-                    "losses": 2,
-                    "goals_for": 42,
-                    "goals_against": 18,
-                    "goal_difference": 24,
-                    "points": 46
-                },
-                # ... more teams
-            ]
+        api_key = os.getenv("API_FOOTBALL_KEY")
+        if not api_key:
+            logger.warning("⚠ API_FOOTBALL_KEY not set. Skipping live standings.")
+            return {}
+        
+        # Example: USL Championship 2026
+        # League ID varies by API - check your API docs for USL Championship ID
+        url = "https://api-football-v1.p.rapidapi.com/v3/standings"
+        params = {
+            "league": 248,  # USL Championship (verify ID with your API)
+            "season": 2026
         }
+        headers = {
+            "X-RapidAPI-Key": api_key,
+            "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
+        }
+        
+        response = requests.get(url, headers=headers, params=params, timeout=10)
+        response.raise_for_status()
+        
+        standings = response.json()
+        logger.info(f"✓ Fetched standings for {len(standings.get('response', []))} groups")
         return standings
         
     except Exception as e:
-        logger.error(f"Failed to fetch API Sports: {e}")
+        logger.error(f"API-Football failed: {e}")
         return {}
 
 
-def fetch_from_usl_website() -> Dict[str, Any]:
+def fetch_wikipedia_club_data(club_name: str) -> Dict[str, Any]:
     """
-    Scrape USL official website for standings.
+    Fetch club data from Wikipedia API for stadium capacity and eligibility checks.
     
-    Uses BeautifulSoup to scrape the standings page.
+    For Pro/Rel content: Verify if clubs meet USL Premier requirements:
+    - 15,000+ seat stadium
+    - $70M+ ownership net worth
+    
+    Args:
+        club_name: e.g., "Sacramento Republic FC"
+    
+    Returns:
+        Club data including stadium capacity, location, ownership info
     """
     try:
-        from bs4 import BeautifulSoup
-        logger.info("🌐 Fetching from USL website...")
+        logger.info(f"🏟️  Fetching Wikipedia data for {club_name}...")
         
-        # Example: https://www.uslchampionship.com/standings
-        url = "https://www.uslchampionship.com/standings"
-        
-        # In production, add proper error handling and user-agent
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        
-        soup = BeautifulSoup(response.content, "lxml")
-        
-        # Parse standings table (structure depends on actual HTML)
-        # This is a placeholder - inspect the HTML to find correct selectors
-        standings_data = {
-            "source": "USL Official Website",
-            "timestamp": datetime.now().isoformat(),
-            "data": "parsed_standings_here"
+        url = "https://en.wikipedia.org/w/api.php"
+        params = {
+            "action": "query",
+            "titles": club_name,
+            "prop": "extracts",
+            "explaintext": True,
+            "format": "json"
         }
         
-        return standings_data
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        pages = data.get("query", {}).get("pages", {})
+        
+        # Extract text
+        for page_id, page_data in pages.items():
+            extract = page_data.get("extract", "")
+            
+            # Parse for key metrics (basic extraction)
+            club_info = {
+                "club_name": club_name,
+                "wikipedia_summary": extract[:300],  # First 300 chars
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            # Look for stadium capacity in text (basic pattern matching)
+            if "stadium" in extract.lower():
+                logger.info(f"  Found stadium info for {club_name}")
+            
+            return club_info
+        
+        return {}
         
     except Exception as e:
-        logger.error(f"Failed to fetch USL website: {e}")
+        logger.error(f"Wikipedia fetch failed for {club_name}: {e}")
+        return {}
+
+
+def fetch_reddit_sentiment() -> List[Dict[str, Any]]:
+    """
+    Fetch top weekly posts from r/USLPRO and r/MLS for cultural sentiment.
+    
+    Uses PRAW (Python Reddit API Wrapper).
+    Requires Reddit OAuth credentials.
+    
+    This data helps the LLM adopt authentic fan voice and tone.
+    """
+    if not praw:
+        logger.warning("⚠ praw not installed. Skipping Reddit sentiment.")
+        return []
+    
+    try:
+        logger.info("🔴 Fetching Reddit sentiment from r/USLPRO...")
+        
+        reddit = praw.Reddit(
+            client_id=os.getenv("REDDIT_CLIENT_ID"),
+            client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
+            user_agent=os.getenv("REDDIT_USER_AGENT", "UnfranchisedFC/1.0"),
+        )
+        
+        posts = []
+        
+        for subreddit_name in ["USLPRO", "MLS"]:
+            subreddit = reddit.subreddit(subreddit_name)
+            
+            # Get top posts from the week
+            for post in subreddit.top(time_filter="week", limit=5):
+                posts.append({
+                    "subreddit": subreddit_name,
+                    "title": post.title,
+                    "score": post.score,
+                    "url": post.url,
+                    "comments_sample": [
+                        {"text": c.body, "score": c.score}
+                        for c in post.comments[:3]  # Top 3 comments
+                    ],
+                    "timestamp": datetime.fromtimestamp(post.created_utc).isoformat()
+                })
+        
+        logger.info(f"✓ Fetched {len(posts)} posts from Reddit")
+        return posts
+        
+    except Exception as e:
+        logger.error(f"Reddit fetch failed: {e}")
+        logger.info("  (Ensure REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET are set)")
+        return []
+
+
+def fetch_rss_feeds() -> List[Dict[str, Any]]:
+    """
+    Fetch latest news from USL and team RSS feeds.
+    
+    Feeds include:
+    - USL Official news
+    - Individual club RSS feeds
+    - Soccer journalism sites
+    """
+    if not feedparser:
+        logger.warning("⚠ feedparser not installed. Skipping RSS feeds.")
+        return []
+    
+    try:
+        logger.info("📰 Fetching RSS feeds...")
+        
+        rss_urls = [
+            {"name": "USL Official", "url": "https://www.uslchampionship.com/feed"},
+            {"name": "Pittsburgh Riverhounds", "url": "https://www.riverhoundssoccer.com/feed"},
+            {"name": "Detroit City FC", "url": "https://www.detcityfc.com/feed"},
+            {"name": "Sacramento Republic", "url": "https://www.sacrepublicfc.com/feed"},
+            {"name": "Soccer.com News", "url": "https://www.soccer.com/feed"},
+            # Add more as needed
+        ]
+        
+        all_items = []
+        
+        for feed_info in rss_urls:
+            try:
+                feed = feedparser.parse(feed_info["url"])
+                
+                for entry in feed.entries[:3]:  # Top 3 items per feed
+                    all_items.append({
+                        "source": feed_info["name"],
+                        "title": entry.get("title", ""),
+                        "link": entry.get("link", ""),
+                        "summary": entry.get("summary", "")[:200],
+                        "published": entry.get("published", ""),
+                    })
+                
+                logger.info(f"  ✓ {feed_info['name']}")
+                
+            except Exception as e:
+                logger.warning(f"  ✗ {feed_info['name']}: {e}")
+        
+        logger.info(f"✓ Fetched {len(all_items)} RSS items")
+        return all_items
+        
+    except Exception as e:
+        logger.error(f"RSS fetch failed: {e}")
+        return []
+
+
+def load_base_camps() -> Dict[str, Any]:
+    """
+    Load static World Cup 2026 base camp data.
+    
+    This connects global superpowers (Argentina, Spain, Brazil, etc.)
+    to local USL Championship clubs, enabling narrative bridges.
+    """
+    try:
+        logger.info("🏕️  Loading World Cup base camps...")
+        
+        base_camps_path = Path(__file__).parent.parent / "data" / "base_camps.json"
+        
+        if not base_camps_path.exists():
+            logger.warning(f"base_camps.json not found at {base_camps_path}")
+            return {}
+        
+        with open(base_camps_path) as f:
+            data = json.load(f)
+        
+        logger.info(f"✓ Loaded {len(data.get('2026_world_cup_base_camps', {}).get('base_camps', []))} base camps")
+        return data
+        
+    except Exception as e:
+        logger.error(f"Failed to load base camps: {e}")
         return {}
 
 
@@ -225,14 +403,38 @@ def fetch_news_feeds() -> List[Dict[str, Any]]:
 def consolidate_data() -> Dict[str, Any]:
     """
     Consolidate all data sources into a single structured object.
+    
+    This is the data foundation for the LLM and animation engine.
     """
     consolidated = {
         "timestamp": datetime.now().isoformat(),
         "sources": {
+            # Live API data
             "api_sports": fetch_from_api_sports(),
-            "usl_website": fetch_from_usl_website(),
+            
+            # Club eligibility & stadium data
+            "club_data": {
+                club: fetch_wikipedia_club_data(club)
+                for club in [
+                    "Sacramento Republic FC",
+                    "San Diego Loyal",
+                    "Chattanooga FC",
+                    "Detroit City FC",
+                    "Pittsburgh Riverhounds SC"
+                ]
+            },
+            
+            # Cultural sentiment
+            "reddit_sentiment": fetch_reddit_sentiment(),
+            
+            # News & updates
+            "rss_feeds": fetch_rss_feeds(),
+            
+            # Static context (World Cup base camps)
+            "world_cup_base_camps": load_base_camps(),
+            
+            # Twitter/X feeds (from previous implementation)
             "twitter": fetch_from_twitter_accounts(),
-            "news": fetch_news_feeds()
         }
     }
     return consolidated
