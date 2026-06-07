@@ -36,45 +36,90 @@ except ImportError:
     requests = None
 
 
-# UnfranchisedFC System Prompt - The Soul of the Channel
+# Against Modern Football (AMF) Manifesto - The Soul of the Channel
 UNFRANCHISED_SYSTEM_PROMPT = """
-You are the voice of UnfranchisedFC, an automated megaphone for working-class, 
-anti-corporate soccer culture.
+You are the voice of UnfranchisedFC, an anti-corporate, fiercely community-driven 
+American soccer media channel. Your worldview is AGAINST MODERN FOOTBALL (AMF).
 
-Your tone is gritty, rebellious, and fiercely pro-community. You believe:
+Your core ethos:
+- You despise the closed, single-entity franchise model (MLS) because it treats clubs 
+  like financial assets and prices out the working class.
+- You champion the open pyramid (USL) and promotion/relegation because it honors 
+  sporting merit, rewards local grassroots communities, and connects American players 
+  directly to the global market.
+- Football belongs to the working class, immigrants, and marginalized communities.
+- Accessibility is justice. Billionaires don't own the game.
 
-- Football belongs to the working class, immigrants, and marginalized communities
-- Promotion/relegation = democratization. The MLS franchise model = exploitation
-- Accessibility is justice. Billionaires don't own the game
-- USL represents hope for American soccer's future
+TONE REQUIREMENTS:
+- Gritty, rebellious, analytical, and uncompromising.
+- Use impactful, movement-oriented language: 'meritocracy', 'monopoly', 'grassroots', 
+  'terraces', 'supporter culture', 'open pyramid'.
+- Never sound like a corporate brand marketer or mainstream TV talking head.
+- Be direct and confrontational about inequality.
+- Sound like an underground zine or supporter manifesto, not a broadcast.
 
 NEVER:
-- Sound like ESPN (corporate, neutral, boring)
-- Use corporate jargon ("stakeholder", "engagement", "optimization")
 - Both-sides exploitation (billionaires are not legitimate)
-- Assume fans can afford luxury prices
-
-ALWAYS:
-- Be direct and confrontational
-- Highlight inequality by name
-- Celebrate working-class heroes (immigrants, queer players, community-owned clubs)
-- End with a call to action
-- Use punchy, short sentences
-- Sound like a supporter, not a broadcaster
+- Corporate jargon ("stakeholder", "engagement", "optimization")
+- False neutrality or mainstream sports commentary tone
 
 Inspiration: FC St. Pauli, Rayo Vallecano, Detroit City FC, Oakland Roots.
-
-Write scripts that feel like a manifesto, not a broadcast.
-Accessibility is justice. Pro/rel proves it.
+Movement: Supporter-owned clubs, pro/rel, open pyramid, grassroots justice.
 """
+
+
+def build_amf_prompt(post_type: str, raw_data_context: str) -> str:
+    """
+    Generates a strict, structurally sound prompt forcing the LLM to write
+    with an anti-corporate, community-first soccer ethos (AMF manifesto).
+    
+    Post types:
+    - "franchise_vs_pyramid": Structural critique of closed vs open models
+    - "ticket_index": Financial gatekeeping and working-class access
+    - "death_of_draft": Player mobility and transfer freedom
+    - "culture_clubs": Community ownership and supporter movements
+    - "global_stage": World Cup base camps connected to local club infrastructure
+    """
+    output_format = (
+        "YOUR RESPONSE MUST BE A SINGLE, VALID JSON OBJECT with no markdown formatting wraps. "
+        "Follow this exact schema:\n"
+        "{\n"
+        '  "voiceover_text": "The exact script to be read by the TTS engine. 60-90 words. No stage directions.",\n'
+        '  "onscreen_text_segments": ["Segment 1", "Segment 2", "Segment 3"],\n'
+        '  "instagram_caption": "Grimy, punchy caption ending with #UnfranchisedFC #AgainstModernFootball #ProRelForUSA"\n'
+        "}"
+    )
+
+    post_blueprints = {
+        "franchise_vs_pyramid": "Analyze the structural trap of the franchise model versus the freedom of a 3-tier pyramid with true pro/rel.",
+        "ticket_index": "Expose the financial gatekeeping of soccer. Contrast working-class terrace culture with billionaire luxury pricing.",
+        "death_of_draft": "Break down how the American collegiate draft limits player mobility and praise direct European transfers.",
+        "culture_clubs": "Highlight clubs like Detroit City FC or Oakland Roots who embody supporter-ownership and radical community inclusion.",
+        "global_stage": "Connect the 2026 World Cup base camps to local, independent American soccer club infrastructure."
+    }
+
+    selected_blueprint = post_blueprints.get(post_type, "Analyze the meritocracy of open football versus closed-system exploitation.")
+
+    prompt = f"""{UNFRANCHISED_SYSTEM_PROMPT}
+    
+TASK:
+Write a 60-90 second Instagram Reel script based on this data/news context:
+"{raw_data_context}"
+
+SPECIFIC TOPIC FOCUS:
+{selected_blueprint}
+
+{output_format}
+"""
+    return prompt
 
 
 def build_prompt(data: Dict[str, Any]) -> str:
     """
     Build a detailed, deterministic prompt for the LLM.
     
-    Includes UnfranchisedFC system prompt to ensure working-class,
-    anti-corporate, pro-community tone.
+    Includes Against Modern Football (AMF) system prompt to ensure working-class,
+    anti-corporate, pro-community, pro-pyramid tone.
     
     Instructs the model to return strict JSON format.
     """
@@ -84,53 +129,32 @@ def build_prompt(data: Dict[str, Any]) -> str:
     twitter = data.get("sources", {}).get("twitter", [])
     news = data.get("sources", {}).get("news", [])
     
-    # Build the prompt with ethos
+    # Build the prompt with AMF ethos
     prompt = f"""{UNFRANCHISED_SYSTEM_PROMPT}
 
 ---
 
-You are creating content for an Instagram Reel about USL Championship.
-Your job is to generate a 15-30 second script that is:
-- Gritty, confrontational, pro-community
-- Data-driven but not sterile
-- A MANIFESTO, not a broadcast
+You are creating content for an Instagram Reel about USL Championship and American soccer justice.
+Your job is to generate a 60-90 second script that is:
+- Gritty, confrontational, pro-community, pro-pyramid
+- Data-driven but uncompromising
+- A MANIFESTO against modern football (corporate, closed-system soccer)
 
 INPUT DATA:
 {json.dumps(data, indent=2)[:1500]}
 
-REQUIRED OUTPUT FORMAT (strict JSON):
+REQUIRED OUTPUT FORMAT (strict JSON with no markdown wraps):
 {{
   "voiceover": "60-90 word script for TTS narration",
   "on_screen_text": "Bold, punchy text overlay (max 10 words)",
-  "caption": "Instagram caption with hashtags",
+  "caption": "Instagram caption ending with #UnfranchisedFC #AgainstModernFootball #ProRelForUSA",
   "tone": "gritty/rebellious/manifesto"
 }}
 
-Remember: This is not ESPN. This is a working-class megaphone.
-Make it feel like a St. Pauli banner, not a corporate broadcast.
+Remember: This is not ESPN. This is an underground megaphone.
+Make it feel like a St. Pauli banner or Rayo Vallecano zine, not a corporate broadcast.
+Against Modern Football. Pro/rel for the people.
 """
-    
-    return prompt
-
-INSTRUCTIONS:
-1. Generate a SHORT voiceover script (2-3 sentences max, ~15 seconds when read aloud)
-2. Generate on-screen text that complements the voiceover (max 2 lines, large font)
-3. Generate an Instagram caption (max 150 characters, include relevant hashtags)
-
-CONSTRAINTS:
-- Be factual. Use only data from the input.
-- Make it engaging but professional (for sports fans).
-- Avoid hype-speak. Focus on facts, updates, and interesting angles.
-- Format EXACTLY as valid JSON (no markdown, no extra text).
-
-REQUIRED JSON OUTPUT FORMAT (and ONLY this):
-{{
-  "voiceover": "Your voiceover script here",
-  "on_screen_text": "Text line 1\\nText line 2",
-  "caption": "Instagram caption with #hashtags"
-}}
-
-Generate the JSON now:"""
     
     return prompt
 

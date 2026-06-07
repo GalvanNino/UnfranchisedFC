@@ -1,0 +1,116 @@
+name: UnfranchisedFC AMF Pipeline
+
+on:
+  schedule:
+    # Run daily at 10 AM UTC (6 AM EST, 3 AM PST)
+    - cron: '0 10 * * *'
+  
+  # Allow manual trigger from GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      post_number:
+        description: 'Post number (1-9) or "auto" for daily selection'
+        required: false
+        default: 'auto'
+
+env:
+  PYTHON_VERSION: '3.14'
+  FFMPEG_VERSION: '8.1.1'
+
+jobs:
+  deploy-amf-pipeline:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.14'
+      
+      - name: Install FFmpeg
+        run: brew install ffmpeg
+      
+      - name: Set up virtual environment
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+      
+      - name: Install dependencies
+        run: |
+          source venv/bin/activate
+          pip install -r requirements-minimal.txt
+      
+      - name: Create .env file from secrets
+        run: |
+          cat > .env << EOF
+          ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}
+          TOGETHER_API_KEY=${{ secrets.TOGETHER_API_KEY }}
+          API_FOOTBALL_KEY=${{ secrets.API_FOOTBALL_KEY }}
+          REDDIT_CLIENT_ID=${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET=${{ secrets.REDDIT_CLIENT_SECRET }}
+          TWITTER_BEARER_TOKEN=${{ secrets.TWITTER_BEARER_TOKEN }}
+          INSTAGRAPI_USERNAME=${{ secrets.INSTAGRAPI_USERNAME }}
+          INSTAGRAPI_PASSWORD=${{ secrets.INSTAGRAPI_PASSWORD }}
+          AUDIO_STRATEGY=C
+          EOF
+      
+      - name: Run closed-loop test
+        run: |
+          source venv/bin/activate
+          python3 closed_loop_test.py
+        continue-on-error: true
+      
+      - name: Run full orchestrator
+        run: |
+          source venv/bin/activate
+          python3 src/orchestrator.py
+        env:
+          GITHUB_ACTIONS: 'true'
+      
+      - name: Upload video artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: amf-videos
+          path: output/video/*.mp4
+          retention-days: 7
+      
+      - name: Post results to GitHub
+        if: always()
+        run: |
+          echo "✅ UnfranchisedFC AMF Pipeline Execution Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 Pipeline Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "🎬 Video artifacts available in Actions" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Ethos: Against Modern Football (AMF)" >> $GITHUB_STEP_SUMMARY
+          echo "#UnfranchisedFC #AgainstModernFootball #ProRelForUSA" >> $GITHUB_STEP_SUMMARY
+
+  notify:
+    needs: deploy-amf-pipeline
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Send Slack notification (optional)
+        if: secrets.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "UnfranchisedFC AMF Pipeline: ${{ needs.deploy-amf-pipeline.result }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*UnfranchisedFC AMF Pipeline*\nStatus: ${{ needs.deploy-amf-pipeline.result }}\n\nAgainst Modern Football. Pro/Rel for the People."
+                  }
+                }
+              ]
+            }

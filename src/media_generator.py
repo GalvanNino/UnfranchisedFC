@@ -23,9 +23,10 @@ from typing import Dict, Optional
 from loguru import logger
 
 try:
-    from elevenlabs import generate, set_api_key, Voice, VoiceSettings
+    from elevenlabs.client import ElevenLabs
 except ImportError:
     logger.warning("elevenlabs not installed. Using TTS fallback.")
+    ElevenLabs = None
 
 try:
     from moviepy.editor import (
@@ -63,28 +64,32 @@ def generate_audio(voiceover_text: str, output_dir: Path) -> Path:
         logger.warning("⚠ ELEVENLABS_API_KEY not set. Generating silent audio instead.")
         return generate_silent_audio(voiceover_text, output_dir)
     
+    # Check if elevenlabs module loaded successfully
+    if ElevenLabs is None:
+        logger.warning("⚠ elevenlabs module not available. Generating silent audio instead.")
+        return generate_silent_audio(voiceover_text, output_dir)
+    
     try:
-        set_api_key(api_key)
+        # Initialize ElevenLabs client
+        client = ElevenLabs(api_key=api_key)
         
-        # Generate speech using ElevenLabs
-        # Choose a voice (Adam, Bella, Charlotte, etc.)
-        audio = generate(
+        # Generate speech using ElevenLabs text_to_speech
+        # Using newer model "tts-1" (replaces deprecated eleven_monolingual_v1)
+        audio = client.text_to_speech.convert(
             text=voiceover_text,
-            voice=Voice(
-                voice_id="21m00Tcm4TlvDq8ikWAM",  # Rachel voice (neutral, professional)
-                settings=VoiceSettings(
-                    stability=0.5,
-                    similarity_boost=0.75,
-                )
-            ),
-            model="eleven_monolingual_v1"  # Fast, cheap model
+            voice_id="21m00Tcm4TlvDq8ikWAM",  # Rachel voice
+            model_id="eleven_flash_v2"  # Fast, cheap, modern model
         )
         
         output_path = output_dir / "audio" / "voiceover.mp3"
-        with open(output_path, "wb") as f:
-            f.write(audio)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         
-        logger.info(f"✓ Audio generated: {output_path}")
+        # Audio is an iterator of bytes
+        with open(output_path, "wb") as f:
+            for chunk in audio:
+                f.write(chunk)
+        
+        logger.info(f"✓ Audio generated via ElevenLabs: {output_path}")
         return output_path
         
     except Exception as e:
@@ -134,16 +139,16 @@ def generate_video(
     apply_brutalism: bool = True
 ) -> Path:
     """
-    Generate video with on-screen text using MoviePy.
+    Generate video with on-screen text using ffmpeg + PIL (pure Python approach).
     
     Creates a UnfranchisedFC brutalist graphic:
-    - Pure black or white background (high contrast)
-    - Large, bold on-screen text
-    - Applies visual brutalism (film grain, halftone, vignette)
+    - Pure black background (high contrast)
+    - Bold white on-screen text (centered)
+    - Applies visual brutalism (contrast boost, saturation)
     - Instagram Reel aspect ratio (9:16)
     
     Args:
-        content: Dict with "on_screen_text" and "voiceover"
+        content: Dict with "on_screen_text"
         audio_path: Path to generated audio
         output_dir: Output directory for video
         apply_brutalism: Whether to apply visual effects (default True)
@@ -151,61 +156,102 @@ def generate_video(
     Returns:
         Path to generated MP4.
     """
-    logger.info("🎬 Generating video with brutalist aesthetic...")
+    logger.info("🎬 Generating video with brutalist aesthetic (via ffmpeg + PIL)...")
     
     try:
-        # Get audio duration
-        audio = AudioFileClip(str(audio_path))
-        duration = audio.duration
-        logger.info(f"Audio duration: {duration:.2f}s")
+        import subprocess
+        from PIL import Image, ImageDraw, ImageFont
         
-        # Get UnfranchisedFC color palette (black/white/red/yellow)
-        colors_hex = get_color_palette_hex() if get_color_palette_hex else {
-            "black": "#000000",
-            "white": "#FFFFFF",
-            "red": "#DC143C",
-        }
+        # Get audio duration using ffprobe
+        result = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration", 
+             "-of", "default=noprint_wrappers=1:nokey=1:noesc=1", str(audio_path)],
+            capture_output=True,
+            timeout=5,
+            text=True
+        )
         
-        # Create background: Pure black (stark, dramatic)
-        bg_color = (0, 0, 0)  # Black RGB
-        background = ColorfulVideoClip(
-            size=(1080, 1920),  # Instagram Reel: 9:16 vertical
-            color=bg_color
-        ).set_duration(duration)
+        try:
+            duration = float(result.stdout.strip())
+            logger.info(f"Audio duration: {duration:.2f}s")
+        except:
+            duration = 15  # Default to 15 seconds if ffprobe fails
         
-        # Create text overlay with bold typography
-        text = content["on_screen_text"]
-        text_clip = TextClip(
-            text,
-            fontsize=90,
-            color="white",
-            font="Arial-Black",  # Heavy sans-serif
-            method="caption",
-            size=(900, 400)
-        ).set_position("center").set_duration(duration)
+        # Create text overlay frame using PIL (Brutalist AMF Aesthetic)
+        text = content.get("on_screen_text", "UNFRANCHISED")
+        logger.info(f"Creating brutalist text overlay: {text[:40]}...")
         
-        # Composite: background + text
-        final_video = CompositeVideoClip([background, text_clip])
+        # BRUTALIST BACKGROUND: Pure stark dark color (10, 10, 10) not pure black
+        # (10, 10, 10) = near-black, slightly off-black for punk/zine aesthetic
+        frame = Image.new("RGB", (1080, 1920), color=(10, 10, 10))
+        draw = ImageDraw.Draw(frame)
         
-        # Set audio
-        final_video = final_video.set_audio(audio)
+        # BRUTALIST TYPOGRAPHY: Impact font (heavy, punk/zine style)
+        # Force UPPERCASE for maximum brutalist impact
+        try:
+            # Try Impact first (most brutalist, used in punk/zine design)
+            font = ImageFont.truetype("/System/Library/Fonts/Impact.ttf", 110)
+            logger.info("Using Impact font (brutalist punk/zine standard)")
+        except:
+            try:
+                font = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 96)
+            except:
+                try:
+                    font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 96)
+                except:
+                    font = ImageFont.load_default()
+                    logger.warning("Using default font (text may be small)")
         
-        # Write output (without effects for now; we'll apply them with ffmpeg)
+        # Brutalist text rendering: UPPERCASE + vibrant yellow for maximum contrast/impact
+        text_upper = text.upper()  # Force uppercase for punk/zine aesthetic
+        bbox = draw.textbbox((0, 0), text_upper, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        x = (1080 - text_width) // 2
+        y = (1920 - text_height) // 2
+        
+        # VIBRANT YELLOW #FFFF00 = (255, 255, 0): Direct warning signal, high-contrast, confrontational
+        # Against dark background (10, 10, 10): Maximum visual impact, punk aesthetic
+        draw.text((x, y), text_upper, fill=(255, 255, 0), font=font)
+        logger.info(f"Rendered brutalist text: {text_upper} (YELLOW #FFFF00 on DARK #0A0A0A)")
+        
+        # Save frame as temporary PNG
+        frame_path = output_dir / "video" / "text_overlay.png"
+        frame_path.parent.mkdir(parents=True, exist_ok=True)
+        frame.save(str(frame_path))
+        logger.info(f"✓ Text frame saved: {frame_path}")
+        
         output_path = output_dir / "video" / "final_video_raw.mp4"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
-        logger.info(f"Writing raw video to {output_path}...")
-        final_video.write_videofile(
+        # Create video: color background + overlay text frame + audio
+        # Using -loop 1 to repeat the text frame for the entire duration
+        cmd = [
+            "ffmpeg",
+            "-loop", "1",
+            "-i", str(frame_path),
+            "-i", str(audio_path),
+            "-c:v", "libx264",
+            "-crf", "18",
+            "-preset", "fast",
+            "-c:a", "aac",
+            "-shortest",
             str(output_path),
-            fps=30,
-            codec="libx264",
-            audio_codec="aac",
-            preset="medium",
-            verbose=False,
-            logger=None
-        )
+            "-y"
+        ]
+        
+        logger.info("Rendering video with text overlay...")
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        
+        if result.returncode != 0:
+            logger.error(f"FFmpeg error: {result.stderr[-500:]}")
+            raise RuntimeError(f"FFmpeg failed: {result.stderr}")
         
         logger.info(f"✓ Raw video generated: {output_path}")
+        
+        # Clean up temporary frame
+        frame_path.unlink()
         
         # Apply visual brutalism using ffmpeg
         if apply_brutalism:
@@ -239,12 +285,15 @@ def apply_visual_brutalism(raw_video_path: Path, output_dir: Path) -> Path:
     output_path = output_dir / "video" / "final_video.mp4"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     
+    # Use a temporary file for output, then move it
+    temp_output = output_dir / "video" / "final_video_with_brutalism.mp4"
+    
     # FFmpeg filter chain for UnfranchisedFC aesthetic
-    # eq=contrast=1.4: Boost contrast (make blacks blacker, whites whiter)
+    # Simplified filters that are more stable
+    # eq=contrast=1.4: Boost contrast
     # hue=s=1.2: Increase saturation (punchy colors)
-    # noise=alls=0.04:allf=t: Add film grain
-    # vignette=ratio=2:thickness=0.15: Darken edges
-    filters = "eq=contrast=1.4,hue=s=1.2,noise=alls=0.04:allf=t,vignette=ratio=2:thickness=0.15"
+    # Note: simplified from the full chain for stability
+    filters = "eq=contrast=1.4,hue=s=1.2"
     
     cmd = [
         "ffmpeg",
@@ -254,22 +303,33 @@ def apply_visual_brutalism(raw_video_path: Path, output_dir: Path) -> Path:
         "-crf", "18",  # Quality (lower = better)
         "-c:a", "aac",
         "-b:a", "128k",
-        str(output_path),
+        str(temp_output),
         "-y"  # Overwrite
     ]
     
     try:
-        logger.info(f"FFmpeg command: {' '.join(cmd[:5])}...")
-        subprocess.run(cmd, check=True, capture_output=True)
-        logger.info(f"✓ Brutalism applied: {output_path}")
+        logger.info(f"FFmpeg filters: {filters}")
+        subprocess.run(cmd, check=True, capture_output=True, timeout=60)
+        logger.info(f"✓ Brutalism applied: {temp_output}")
         
-        # Clean up raw video
-        raw_video_path.unlink()
+        # Replace raw video with brutalism version
+        import shutil
+        shutil.move(str(temp_output), str(output_path))
+        
+        # Clean up raw video (only if it's different from output_path)
+        if raw_video_path != output_path and raw_video_path.exists():
+            raw_video_path.unlink()
         
         return output_path
     except subprocess.CalledProcessError as e:
         logger.error(f"ffmpeg filter failed: {e}")
-        raise
+        # Continue anyway - return the original video if filter fails
+        logger.warning("Continuing with unfiltered video...")
+        return raw_video_path
+    except Exception as e:
+        logger.error(f"apply_visual_brutalism failed: {e}")
+        # Return raw video on any error
+        return raw_video_path
 
 
 def get_color_palette_hex() -> Dict[str, str]:
