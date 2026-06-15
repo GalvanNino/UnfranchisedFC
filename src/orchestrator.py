@@ -134,18 +134,24 @@ def main():
         video_path = generate_video(post_content, audio_path, output_dir, apply_brutalism=True)
         logger.info(f"✓ Video generated: {video_path}")
         
-        # Stage 5: Post to Instagram
-        logger.info("📱 Stage 5: Posting to Instagram...")
-        result = post_to_instagram(video_path, post_content["caption"])
-        if result:
-            logger.info(f"✓ Successfully posted to Instagram!")
-            log_pipeline_state("instagram_post", {"status": "success", "media_id": result}, output_dir)
-        else:
-            logger.warning("⚠ Post to Instagram failed. Check credentials.")
-            log_pipeline_state("instagram_post", {"status": "failed"}, output_dir)
+        # Stage 5: Post to Instagram (optional - don't fail pipeline if this doesn't work)
+        logger.info("📱 Stage 5: Attempting to post to Instagram...")
+        try:
+            result = post_to_instagram(video_path, post_content["caption"])
+            if result:
+                logger.info(f"✓ Successfully posted to Instagram!")
+                log_pipeline_state("instagram_post", {"status": "success", "media_id": result}, output_dir)
+            else:
+                logger.warning("⚠ Post to Instagram failed. Check credentials.")
+                log_pipeline_state("instagram_post", {"status": "failed"}, output_dir)
+        except Exception as ig_error:
+            logger.warning(f"⚠ Instagram posting skipped: {ig_error}")
+            logger.info("   (This is optional - video was generated successfully)")
+            log_pipeline_state("instagram_post", {"status": "skipped", "reason": str(ig_error)}, output_dir)
         
         logger.info("✅ Pipeline complete!")
         logger.info("🔥 UnfranchisedFC: Soccer from the streets. Pro/rel is justice.")
+        logger.info(f"📊 Video saved to: {video_path}")
         
     except Exception as e:
         logger.error(f"❌ Pipeline failed at: {e}", exc_info=True)
