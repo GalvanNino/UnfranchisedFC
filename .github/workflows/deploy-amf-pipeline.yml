@@ -14,7 +14,7 @@ on:
         default: 'auto'
 
 env:
-  PYTHON_VERSION: '3.14'
+  PYTHON_VERSION: '3.12'
   FFMPEG_VERSION: '8.1.1'
 
 jobs:
@@ -25,23 +25,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Set up Python 3.14
+      - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: '3.14'
+          python-version: '3.12'
       
       - name: Install FFmpeg
         run: brew install ffmpeg
       
-      - name: Set up virtual environment
-        run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-      
       - name: Install dependencies
         run: |
-          source venv/bin/activate
+          python3 -m pip install --upgrade pip
           pip install -r requirements-minimal.txt
       
       - name: Create .env file from secrets
@@ -59,15 +53,11 @@ jobs:
           EOF
       
       - name: Run closed-loop test
-        run: |
-          source venv/bin/activate
-          python3 closed_loop_test.py
+        run: python3 closed_loop_test.py
         continue-on-error: true
       
       - name: Run full orchestrator
-        run: |
-          source venv/bin/activate
-          python3 src/orchestrator.py
+        run: python3 src/orchestrator.py
         env:
           GITHUB_ACTIONS: 'true'
       
