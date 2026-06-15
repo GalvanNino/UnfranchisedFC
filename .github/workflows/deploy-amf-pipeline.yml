@@ -79,28 +79,3 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Ethos: Against Modern Football (AMF)" >> $GITHUB_STEP_SUMMARY
           echo "#UnfranchisedFC #AgainstModernFootball #ProRelForUSA" >> $GITHUB_STEP_SUMMARY
-
-  notify:
-    needs: deploy-amf-pipeline
-    runs-on: ubuntu-latest
-    if: always()
-    
-    steps:
-      - name: Send Slack notification (optional)
-        uses: slackapi/slack-github-action@v1.24.0
-        if: github.event_name != 'pull_request'
-        with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          payload: |
-            {
-              "text": "UnfranchisedFC AMF Pipeline: ${{ needs.deploy-amf-pipeline.result }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*UnfranchisedFC AMF Pipeline*\nStatus: ${{ needs.deploy-amf-pipeline.result }}\n\nAgainst Modern Football. Pro/Rel for the People."
-                  }
-                }
-              ]
-            }
